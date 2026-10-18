@@ -1,0 +1,160 @@
+# gnmic-rs reference configuration (gnmic-compatible subset).
+# Strings may reference environment variables: $VAR or ${VAR}
+# (passwords only when the value starts with '$').
+
+# ---------------------------------------------------------------------------
+# Defaults for every target registered through the tunnel.
+# ---------------------------------------------------------------------------
+username: ${GNMI_USERNAME}   # sent as gRPC metadata "username"
+password: ${GNMI_PASSWORD}   # sent as gRPC metadata "password"
+# TLS of the gNMI session *inside* the tunnel (device side):
+insecure: true               # plaintext gNMI inside the tunnel
+# skip-verify: true          # TLS without verifying the device certificate
+# tls-ca: /etc/gnmic-rs/device-ca.pem
+# tls-cert: /etc/gnmic-rs/client.pem   # client certificate (mTLS)
+# tls-key: /etc/gnmic-rs/client.key
+# tls-server-name: router.example.com  # default: the target ID
+encoding: json_ietf          # default encoding: json, json_ietf, proto, ascii, bytes
+timeout: 10s                 # tunnel session + TLS establishment timeout
+retry: 10s                   # wait before re-dialing / re-subscribing
+# gzip: false                # gzip-compress gRPC messages
+# metadata:                  # extra gRPC metadata on every Subscribe
+#   x-request-source: gnmic-rs
+
+log-format: text             # text | json
+# log-file: /var/log/gnmic-rs.log
+# debug: false
+
+# ---------------------------------------------------------------------------
+# Tunnel server: devices dial in here (openconfig/grpctunnel).
+# ---------------------------------------------------------------------------
+tunnel-server:
+  address: ":57400"
+  # TLS for the device -> collector connection. Without cert-file/key-file a
+  # self-signed certificate is generated. With a ca-file, client-auth
+  # defaults to "require-verify" (devices must present a certificate signed
+  # by that CA). Modes: "", request, require, verify-if-given, require-verify.
+  # tls:
+  #   cert-file: /etc/gnmic-rs/server.pem
+  #   key-file: /etc/gnmic-rs/server.key
+  #   ca-file: /etc/gnmic-rs/devices-ca.pem
+  #   client-auth: require-verify
+
+  # Flood protection, e.g. thousands of devices reconnecting after a
+  # collector restart. All limits are optional.
+  admission:
+    # Concurrent device connections (0 = unlimited). Extra connections are
+    # shed with an HTTP/2 GOAWAY (closed at TCP on TLS listeners); devices
+    # back off and reconnect later.
+    max-connections: 5000
+    # New registrations per second (0 = unlimited), and bursts allowed.
+    registration-rate: 200
+    registration-burst: 200
+    # A registration waits its turn (FIFO) up to this long, then is refused
+    # with gRPC RESOURCE_EXHAUSTED so the device retries later.
+    registration-queue-timeout: 10s
+    # TLS handshakes processed at once (default 128, 0 = unlimited).
+    max-concurrent-handshakes: 64
+    # Targets dialing and receiving their initial sync at once (default 256,
+    # 0 = unlimited); the others queue. A slot is released at the target's
+    # first sync-response, or after setup-timeout.
+    max-concurrent-setups: 100
+    setup-timeout: 60s
+
+  # Which registered targets to subscribe to. Rules are tried in order;
+  # `id` and `type` are (unanchored) regular expressions. Without rules,
+  # every target of type GNMI_GNOI is accepted with the defaults above.
+  targets:
+    - id: ^core-
+      type: GNMI_GNOI
+      config:
+        subscriptions: [interfaces, cpu]
+        event-tags:          # added to every message of these targets
+          role: core
+    - id: .*
+      type: GNMI_GNOI
+      config:
+        subscriptions: [interfaces]
+
+# ---------------------------------------------------------------------------
+# Subscriptions (gnmic syntax). Supported modes: stream, once.
+# ---------------------------------------------------------------------------
+subscriptions:
+  interfaces:
+    paths:
+      - /interfaces/interface/state/counters
+    mode: stream
+    stream-mode: sample      # sample | on-change | target-defined
+    sample-interval: 30s
+    # outputs: [archive]     # overrides the target/global output selection
+  cpu:
+    paths:
+      - Cisco-IOS-XE-process-cpu-oper:cpu-usage/cpu-utilization
+    stream-mode: sample
+    sample-interval: 60s
+  # Several stream modes in one request:
+  # mixed:
+  #   stream-subscriptions:
+  #     - paths: [/interfaces/interface/state/oper-status]
+  #       stream-mode: on-change
+  #     - paths: [/interfaces/interface/state/counters]
+  #       stream-mode: sample
+  #       sample-interval: 10s
+
+# ---------------------------------------------------------------------------
+# Outputs. Without an `outputs` section, messages go to stdout.
+# ---------------------------------------------------------------------------
+outputs:
+  archive:
+    type: file
+    filename: /var/lib/gnmic-rs/telemetry.json
+    format: event            # json (default) | event | protojson | prototext
+    # split-events: false    # event format: one JSON object per line
+    # multiline: false
+    # indent: "  "
+    # separator: "\n"
+    # add-target: ""         # "", overwrite, if-not-present
+    # override-timestamps: false
+    # calculate-latency: false   # json format only
+    rotation:                # omit for a plain append-only file
+      max-size: 100          # MB before rotating
+      max-backups: 10        # rotated files kept
+      max-age: 30            # days
+      compress: true         # gzip rotated files
+    # buffer-size: 1024      # queued messages before backpressure
+
+  # Default long table: one row per leaf value.
+  timeseries:
+    type: postgres
+    url: postgres://gnmic:${PG_PASSWORD}@postgres:5432/telemetry
+    # or: host, port, database, username, password
+    # tls: {mode: verify-full, ca-file: /etc/gnmic-rs/pg-ca.pem}  # disable | require | verify-full
+    table: gnmi_values
+    create-table: true       # CREATE TABLE IF NOT EXISTS from `columns`
+    # Omitting `columns` gives exactly these:
+    columns:
+      - {name: time,         type: timestamptz, source: timestamp}
+      - {name: target,       type: text,        source: "tag:source"}
+      - {name: subscription, type: text,        source: name}
+      - {name: path,         type: text,        source: path}
+      - {name: value,        type: jsonb,       source: value}
+      - {name: tags,         type: jsonb,       source: tags}
+    batch-size: 1000
+    flush-interval: 1s
+    max-buffered-rows: 100000   # kept in memory while the database is slow or down
+    buffer-full: drop-oldest    # drop-oldest (never slows collection) | block (backpressure, no loss)
+
+  # Wide table: one row per event, chosen leaves as typed columns.
+  # interface_counters:
+  #   type: postgres
+  #   url: postgres://gnmic:${PG_PASSWORD}@postgres:5432/telemetry
+  #   table: interface_counters
+  #   create-table: true
+  #   row-mode: event
+  #   columns:
+  #     - {name: time,       type: timestamptz, source: timestamp}
+  #     - {name: device,     type: text,        source: "tag:source"}
+  #     - {name: interface,  type: text,        source: "tag:interface_name"}
+  #     - {name: in_octets,  type: bigint,      source: "value:in-octets"}
+  #     - {name: out_octets, type: bigint,      source: "value:out-octets"}
+  #     - {name: in_errors,  type: bigint,      source: "value:in-errors"}

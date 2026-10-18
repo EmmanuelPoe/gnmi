@@ -1,0 +1,29 @@
+# Configuration used by deploy/docker-compose.yml (see examples/gnmic.yaml for all options).
+username: ${GNMI_USERNAME}
+password: ${GNMI_PASSWORD}
+insecure: true
+encoding: json_ietf
+
+tunnel-server:
+  address: ":57400"
+
+subscriptions:
+  interfaces:
+    paths: [/interfaces/interface/state/counters]
+    stream-mode: sample
+    sample-interval: 10s
+
+outputs:
+  archive:
+    type: file
+    filename: /var/lib/gnmic-rs/telemetry.json
+    format: event
+    rotation:
+      max-size: 100
+      max-backups: 10
+      compress: true
+  timeseries:
+    type: postgres
+    url: postgres://gnmic:${PG_PASSWORD}@postgres:5432/telemetry
+    table: gnmi_values
+    create-table: true

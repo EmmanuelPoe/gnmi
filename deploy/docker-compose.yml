@@ -1,0 +1,59 @@
+# gnmic-rs + PostgreSQL.
+#
+#   docker compose -f deploy/docker-compose.yml up -d --build
+#   docker compose -f deploy/docker-compose.yml --profile test up -d   # adds 3 simulated devices
+#
+# Set PG_PASSWORD / GNMI_USERNAME / GNMI_PASSWORD in the environment or a .env file.
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: gnmic
+      POSTGRES_PASSWORD: ${PG_PASSWORD:-gnmic}
+      POSTGRES_DB: telemetry
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gnmic -d telemetry"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  gnmic-rs:
+    build: ..
+    image: gnmic-rs:latest
+    command: ["--config", "/etc/gnmic-rs/gnmic.yaml"]
+    ports:
+      - "${TUNNEL_PORT:-57400}:57400"
+    environment:
+      PG_PASSWORD: ${PG_PASSWORD:-gnmic}
+      GNMI_USERNAME: ${GNMI_USERNAME:-admin}
+      GNMI_PASSWORD: ${GNMI_PASSWORD:-admin}
+    volumes:
+      - ./gnmic.yaml:/etc/gnmic-rs/gnmic.yaml:ro
+      - data:/var/lib/gnmic-rs
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    # Time to drain outputs on `docker compose stop`.
+    stop_grace_period: 30s
+
+  sim:
+    profiles: [test]
+    image: gnmic-rs:latest
+    entrypoint: ["/usr/local/bin/dialout-sim"]
+    command:
+      - --server=gnmic-rs:57400
+      - --targets=3
+      - --id-prefix=core-router
+      - --username=${GNMI_USERNAME:-admin}
+      - --password=${GNMI_PASSWORD:-admin}
+      - --interval-ms=1000
+    depends_on: [gnmic-rs]
+    restart: unless-stopped
+
+volumes:
+  pgdata: {}
+  data: {}

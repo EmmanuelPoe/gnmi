@@ -1,0 +1,66 @@
+[package]
+name = "gnmic-rs"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "gNMI dial-out (grpctunnel) collector for Cisco devices, compatible with gnmic configuration"
+license = "Apache-2.0"
+publish = false
+
+[[bin]]
+name = "gnmic-rs"
+path = "src/main.rs"
+
+# Test helper: emulates a Cisco IOS XE device doing gNMI dial-out over grpctunnel.
+[[bin]]
+name = "dialout-sim"
+path = "src/bin/dialout_sim.rs"
+
+[dependencies]
+anyhow = "1"
+base64 = "0.22"
+bytes = "1"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+clap = { version = "4", features = ["derive", "env"] }
+flate2 = "1"
+futures-util = { version = "0.3", default-features = false, features = ["std"] }
+hyper = { version = "1", features = ["server", "http2"] }
+hyper-util = { version = "0.1", features = ["tokio"] }
+prost = "0.14"
+prost-reflect = { version = "0.16", features = ["serde", "text-format"] }
+prost-types = "0.14"
+rcgen = { version = "0.14", default-features = false, features = ["crypto", "ring", "pem"] }
+regex = "1"
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12", "logging"] }
+rustls-native-certs = "0.8"
+serde = { version = "1", features = ["derive"] }
+serde_ignored = "0.1"
+serde_json = "1"
+serde_yaml = "0.9"
+socket2 = "0.6"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "signal", "sync", "time", "io-util", "fs"] }
+tokio-postgres = { version = "0.7", features = ["with-serde_json-1", "with-chrono-0_4"] }
+tokio-postgres-rustls = "0.13"
+tokio-rustls = { version = "0.26", default-features = false, features = ["ring", "tls12", "logging"] }
+tokio-stream = { version = "0.1", features = ["net"] }
+tokio-util = { version = "0.7", features = ["rt"] }
+tonic = { version = "0.14", default-features = false, features = ["transport", "codegen", "router", "gzip", "server"] }
+tonic-prost = "0.14"
+tower = { version = "0.5", default-features = false, features = ["util"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json", "fmt", "ansi"] }
+
+[build-dependencies]
+protox = "0.10"
+prost = "0.14"
+tonic-prost-build = "0.14"
+
+[dev-dependencies]
+tempfile = "3"
+tokio = { version = "1", features = ["test-util"] }
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = true
