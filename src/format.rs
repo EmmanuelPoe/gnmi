@@ -1,3 +1,7 @@
+// Portions derived from gnmic (https://github.com/openconfig/gnmic),
+// Copyright Nokia and the gNMIc contributors, Apache-2.0.
+// Translated from Go to Rust and modified for gnmic-rs. See NOTICE.
+
 //! Message formatting shared by outputs (gnmic's formatters.MarshalOptions).
 
 use std::collections::BTreeMap;
@@ -91,10 +95,11 @@ pub fn go_time(ns: i64) -> String {
 /// gnmic's utils.GetHost: strip a ":port" suffix if present.
 fn host(addr: &str) -> &str {
     if let Some(rest) = addr.strip_prefix('[') {
-        if let Some((h, port)) = rest.split_once("]:") {
-            if !port.is_empty() && port.bytes().all(|b| b.is_ascii_digit()) {
-                return h;
-            }
+        if let Some((h, port)) = rest.split_once("]:")
+            && !port.is_empty()
+            && port.bytes().all(|b| b.is_ascii_digit())
+        {
+            return h;
         }
         return addr;
     }
@@ -184,10 +189,10 @@ impl Marshaler {
                 }
             }
         }
-        if self.override_timestamps {
-            if let Some(subscribe_response::Response::Update(n)) = &mut rsp.to_mut().response {
-                n.timestamp = now_nanos();
-            }
+        if self.override_timestamps
+            && let Some(subscribe_response::Response::Update(n)) = &mut rsp.to_mut().response
+        {
+            n.timestamp = now_nanos();
         }
         rsp
     }

@@ -1,3 +1,6 @@
+// Modified for gnmic-rs: the gnmi_ext.proto import path was changed to a local
+// file so the definitions compile without the upstream directory layout.
+//
 //
 // Copyright 2016 Google Inc. All Rights Reserved.
 //

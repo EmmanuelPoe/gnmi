@@ -1,3 +1,7 @@
+// Portions derived from gnmic (https://github.com/openconfig/gnmic),
+// Copyright Nokia and the gNMIc contributors, Apache-2.0.
+// Translated from Go to Rust and modified for gnmic-rs. See NOTICE.
+
 //! Builds gNMI SubscribeRequests from subscription configs (gnmic's
 //! CreateSubscribeRequest / SubscriptionOpts semantics).
 
@@ -65,10 +69,10 @@ fn validate(sc: &SubscriptionConfig) -> Result<()> {
     if mode != subscription_list::Mode::Stream && !sc.stream_subscriptions.is_empty() {
         bail!("subscription {name:?}: cannot set 'stream-subscriptions' and 'mode'");
     }
-    if let Some(enc) = &sc.encoding {
-        if !enc.is_empty() {
-            parse_encoding(enc).with_context(|| format!("subscription {name:?}"))?;
-        }
+    if let Some(enc) = &sc.encoding
+        && !enc.is_empty()
+    {
+        parse_encoding(enc).with_context(|| format!("subscription {name:?}"))?;
     }
     if mode != subscription_list::Mode::Stream {
         return Ok(());

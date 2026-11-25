@@ -11,7 +11,7 @@ Two binaries: `gnmic-rs` (the collector) and `dialout-sim` (a simulated device u
 ## Commands
 
 ```bash
-cargo build --release                      # target/release/gnmic-rs, dialout-sim (Rust 1.85+, edition 2024; no protoc needed)
+cargo build --release                      # target/release/gnmic-rs, dialout-sim (Rust 1.88+, edition 2024; no protoc needed)
 cargo test                                 # unit + end-to-end tests (spawn collector + simulated devices); ~20 s
 GNMIC_RS_TEST_PG_URL=postgres://gnmic:gnmic@127.0.0.1:55432/telemetry cargo test   # also run Postgres e2e tests
 cargo fmt --check                          # rustfmt.toml: max_width = 110
@@ -38,7 +38,8 @@ See the README "Layout" section. Quick map: `tunnel.rs` (grpctunnel server), `ad
 
 - Never commit real device credentials, certificates or private keys; tests generate their own with `rcgen`.
 - Add an e2e test in `tests/e2e.rs` for any behavior change visible on the wire or in outputs.
-- Do not edit vendored files in `proto/` except to update them wholesale from upstream.
+- Do not edit vendored files in `proto/` except to update them wholesale from upstream; keep their license headers and the modification note in `gnmi.proto`.
+- Code translated from gnmic keeps its attribution header, and `NOTICE` lists every derived file; update both when porting more.
 - New config keys: add to `config.rs` with serde, document in `examples/gnmic.yaml` and the README tables.
 
 ## Docs

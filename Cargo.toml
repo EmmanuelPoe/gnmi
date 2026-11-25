@@ -2,7 +2,7 @@
 name = "gnmic-rs"
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.88"
 description = "gNMI dial-out (grpctunnel) collector for Cisco devices, compatible with gnmic configuration"
 license = "Apache-2.0"
 publish = false

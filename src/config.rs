@@ -1,3 +1,7 @@
+// Portions derived from gnmic (https://github.com/openconfig/gnmic),
+// Copyright Nokia and the gNMIc contributors, Apache-2.0.
+// Translated from Go to Rust and modified for gnmic-rs. See NOTICE.
+
 //! gnmic-compatible configuration file (the subset needed for dial-out collection).
 
 use std::collections::BTreeMap;
@@ -367,12 +371,12 @@ fn expand_vars(s: &str) -> String {
     while let Some(i) = rest.find('$') {
         out.push_str(&rest[..i]);
         let after = &rest[i + 1..];
-        if let Some(braced) = after.strip_prefix('{') {
-            if let Some(end) = braced.find('}') {
-                out.push_str(&std::env::var(&braced[..end]).unwrap_or_default());
-                rest = &braced[end + 1..];
-                continue;
-            }
+        if let Some(braced) = after.strip_prefix('{')
+            && let Some(end) = braced.find('}')
+        {
+            out.push_str(&std::env::var(&braced[..end]).unwrap_or_default());
+            rest = &braced[end + 1..];
+            continue;
         }
         let n = after
             .bytes()

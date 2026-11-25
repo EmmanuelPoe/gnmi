@@ -174,10 +174,10 @@ pub fn start(
             }
             // Flush whenever the queue is drained: low latency when idle,
             // large writes under load.
-            if rx.is_empty() {
-                if let Err(e) = sink.flush() {
-                    tracing::error!(output = %name, file = %label, error = %e, "failed to flush file");
-                }
+            if rx.is_empty()
+                && let Err(e) = sink.flush()
+            {
+                tracing::error!(output = %name, file = %label, error = %e, "failed to flush file");
             }
         }
         if let Err(e) = sink.flush() {

@@ -1,3 +1,7 @@
+// Portions derived from gnmic (https://github.com/openconfig/gnmic),
+// Copyright Nokia and the gNMIc contributors, Apache-2.0.
+// Translated from Go to Rust and modified for gnmic-rs. See NOTICE.
+
 //! XPath <-> gNMI Path conversion, ported from gnmic's pkg/api/path.
 
 use std::collections::BTreeMap;

@@ -532,11 +532,11 @@ impl Writer {
     /// errors) are dropped; on a connection failure the next attempt is
     /// scheduled with exponential backoff and Err asks to keep the rows.
     async fn write_batch(&mut self, rows: &[Row]) -> Result<(), ()> {
-        if self.client.is_none() {
-            if let Err(e) = self.connect().await {
-                self.fail(&format!("{e:#}"));
-                return Err(());
-            }
+        if self.client.is_none()
+            && let Err(e) = self.connect().await
+        {
+            self.fail(&format!("{e:#}"));
+            return Err(());
         }
         match tokio::time::timeout(COPY_TIMEOUT, self.copy(rows)).await {
             Ok(Ok(written)) => {
