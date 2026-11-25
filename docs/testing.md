@@ -10,13 +10,13 @@
 | `tests/bench/bench.sh <format> <cpus> <seconds>` | throughput/CPU/memory vs gnmic | Docker |
 | `tests/bench/flood.sh <devices>` | reconnect flood with and without admission control | Docker, a multi-core host |
 
-Last local run: 39 unit and 21 e2e tests passed without Postgres.
+Last local run: 39 unit and 21 e2e tests passed without Postgres. CI (`.github/workflows/ci.yml`) runs everything including the Postgres suite (service container on port 55432, `GNMIC_RS_TEST_PG_URL` set).
 
 ## Before every PR
 
 ```bash
 cargo fmt --check
-cargo clippy --all-targets          # one existing warning: unnecessary_sort_by in src/output/rotate.rs
+cargo clippy --all-targets -- -D warnings   # CI treats warnings as errors
 cargo test
 ```
 
@@ -29,4 +29,3 @@ Also run `compare_with_gnmic.sh` when touching `format.rs`, `gojson.rs`, `event.
 - For admission-control behavior, assert on log lines or counters rather than timing where possible; timing-based assertions are flaky on loaded CI hosts.
 - `dialout-sim` can stream every gNMI value type in JSON_IETF, JSON and PROTO; use it to cover encoding edge cases.
 
-There is no CI workflow yet; adding one that runs fmt, clippy and `cargo test` (with a Postgres service container) is a good next step.

@@ -21,4 +21,4 @@
 
 ## Done means
 
-`cargo fmt --check`, `cargo clippy --all-targets` (no new warnings) and `cargo test` pass; compat and Postgres suites run when relevant; README and `examples/gnmic.yaml` updated for user-visible changes.
+`cargo fmt --check`, `cargo clippy --all-targets -- -D warnings` and `cargo test` pass (CI enforces all three); compat and Postgres suites run when relevant; README and `examples/gnmic.yaml` updated for user-visible changes.

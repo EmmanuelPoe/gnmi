@@ -20,7 +20,7 @@ gnmic-rs --config examples/gnmic.yaml --check   # validate config + certificates
 docker build -t gnmic-rs .                 # distroless, non-root
 ```
 
-Current state (checked): `cargo test` passes (39 unit, 21 e2e), `cargo fmt --check` is clean, clippy reports one `unnecessary_sort_by` warning in `src/output/rotate.rs`.
+CI (`.github/workflows/ci.yml`) runs `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings` and `cargo test --locked` with a Postgres 17 service (so the Postgres e2e tests run too). Locally: 39 unit and 21 e2e tests pass, fmt and clippy are clean.
 
 ## Hard constraints
 

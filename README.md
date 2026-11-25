@@ -229,6 +229,8 @@ tests/bench/bench.sh event 1 30              # throughput/CPU/memory vs gnmic, b
 tests/bench/flood.sh 3000                    # 3,000 devices reconnecting at once, with/without admission
 ```
 
+CI (`.github/workflows/ci.yml`) runs `cargo fmt --check`, `cargo clippy -- -D warnings` and the full test suite, including the PostgreSQL tests against a service container.
+
 The end-to-end suite covers file formats, credentials and retries, tunnel
 mTLS and self-signed TLS, TLS inside the tunnel, target rules, graceful and
 abrupt device loss, re-registration, broken tunnel sessions, `once`
