@@ -131,12 +131,23 @@ impl Admission {
 
     /// Admits a new connection, or None when it must be shed.
     pub fn try_connection(self: &Arc<Self>) -> Option<ConnectionGuard> {
-        let admitted = self
-            .connections
-            .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |n| {
-                (self.max_connections == 0 || n < self.max_connections).then_some(n + 1)
-            })
-            .is_ok();
+        // Compare-exchange loop (equivalent to fetch_update, which newer toolchains
+        // deprecate; its replacement is newer than this crate's rust-version).
+        let mut current = self.connections.load(Ordering::Relaxed);
+        let admitted = loop {
+            if self.max_connections != 0 && current >= self.max_connections {
+                break false;
+            }
+            match self.connections.compare_exchange_weak(
+                current,
+                current + 1,
+                Ordering::Relaxed,
+                Ordering::Relaxed,
+            ) {
+                Ok(_) => break true,
+                Err(actual) => current = actual,
+            }
+        };
         if !admitted {
             self.shed_connections.fetch_add(1, Ordering::Relaxed);
         }

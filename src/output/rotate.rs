@@ -200,7 +200,7 @@ fn mill(path: &Path, max_backups: usize, max_age: Duration, compress: bool) -> i
             backups.push((t, entry.path(), gz));
         }
     }
-    backups.sort_by(|a, b| b.0.cmp(&a.0));
+    backups.sort_by_key(|b| std::cmp::Reverse(b.0));
 
     let cutoff = SystemTime::now()
         .checked_sub(max_age)
