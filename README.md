@@ -13,7 +13,7 @@ about half the CPU and a fraction of the memory.
 
 ## Build
 
-Only a Rust toolchain (1.85+) is needed — protobuf definitions are compiled
+Only a Rust toolchain (1.88+) is needed — protobuf definitions are compiled
 by a pure-Rust compiler, no `protoc` or Go:
 
 ```sh
@@ -279,3 +279,10 @@ src/tls.rs         rustls configuration
 src/bin/dialout_sim.rs   simulated device for tests
 proto/             vendored gnmi, gnmi_ext and grpctunnel definitions
 ```
+
+## License and attribution
+
+Licensed under the [Apache License 2.0](LICENSE). gnmic-rs is an independent Rust re-implementation of gnmic's dial-out collector; parts of its configuration handling, path conversion, subscription building and output formatting were translated from [gnmic](https://github.com/openconfig/gnmic) (Apache-2.0, © Nokia and the gNMIc contributors), and `proto/` holds the gNMI and grpctunnel definitions from [openconfig/gnmi](https://github.com/openconfig/gnmi) and [openconfig/grpctunnel](https://github.com/openconfig/grpctunnel) (Apache-2.0, © Google). Details are in [NOTICE](NOTICE).
+
+This project is not affiliated with or endorsed by Nokia, Google or the OpenConfig project; "gnmic" is used only to describe compatibility.
+

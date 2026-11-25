@@ -239,11 +239,11 @@ impl Registry {
                 }
                 // Newest registration wins: a device that reconnects after a
                 // reboot must not be locked out by its own stale session.
-                if let Some(old) = st.targets.insert(tt.clone(), client) {
-                    if let Some(oc) = st.clients.get_mut(&old) {
-                        oc.targets.remove(&tt);
-                        tracing::warn!(target = %tt.id, old_peer = %peer(oc.addr), "target re-registered by another connection, replacing the previous registration");
-                    }
+                if let Some(old) = st.targets.insert(tt.clone(), client)
+                    && let Some(oc) = st.clients.get_mut(&old)
+                {
+                    oc.targets.remove(&tt);
+                    tracing::warn!(target = %tt.id, old_peer = %peer(oc.addr), "target re-registered by another connection, replacing the previous registration");
                 }
                 let Some(c) = st.clients.get_mut(&client) else {
                     return (None, None);
@@ -346,10 +346,10 @@ impl Registry {
             .ok_or_else(|| Status::not_found(format!("no connection associated with tag {tag}")))?;
         let client_addr = st.clients.get(&client).and_then(|c| c.addr);
         // The data stream must come from the connection that registered the target.
-        if let (Some(a), Some(b)) = (client_addr, addr) {
-            if a != b {
-                return Err(Status::permission_denied("tag belongs to another client"));
-            }
+        if let (Some(a), Some(b)) = (client_addr, addr)
+            && a != b
+        {
+            return Err(Status::permission_denied("tag belongs to another client"));
         }
         Ok(st.pending.remove(&tag).expect("checked above"))
     }

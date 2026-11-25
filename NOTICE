@@ -1,0 +1,29 @@
+gnmic-rs
+Copyright 2026 Emmanuel Poe
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+gnmic-rs is an independent Rust re-implementation of the gNMI dial-out
+collector of gnmic. It is not affiliated with, endorsed by or supported by
+Nokia, Google or the OpenConfig project. "gnmic" is used only to describe
+compatibility.
+
+This product includes or is derived from the following Apache-2.0 licensed
+works:
+
+* gnmic - https://github.com/openconfig/gnmic
+  Copyright Nokia and the gNMIc contributors.
+  Portions of the configuration handling, xpath <-> gNMI path conversion,
+  subscription request building, event model and output formatting were
+  translated from Go to Rust and modified (src/config.rs, src/path.rs,
+  src/subscribe.rs, src/event.rs, src/format.rs). Configuration key names and
+  the json/event output formats follow gnmic's.
+
+* gNMI protocol definitions - https://github.com/openconfig/gnmi
+  Copyright 2016-2018 Google Inc.
+  proto/gnmi.proto (modified: import path of gnmi_ext.proto) and
+  proto/gnmi_ext.proto (unmodified).
+
+* grpctunnel protocol definition - https://github.com/openconfig/grpctunnel
+  Copyright 2019 Google Inc.
+  proto/tunnel.proto (unmodified). src/tunnel.rs implements this protocol.

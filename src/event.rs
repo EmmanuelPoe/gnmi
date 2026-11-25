@@ -1,3 +1,7 @@
+// Portions derived from gnmic (https://github.com/openconfig/gnmic),
+// Copyright Nokia and the gNMIc contributors, Apache-2.0.
+// Translated from Go to Rust and modified for gnmic-rs. See NOTICE.
+
 //! gnmic "event" model: one event per update/delete with path keys as tags
 //! and flattened leaf values (port of pkg/formatters/event.go).
 

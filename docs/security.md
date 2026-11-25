@@ -11,7 +11,8 @@ The collector accepts inbound connections from network devices and holds device 
 ## Credentials
 
 - Put passwords in the environment and reference them as `${GNMI_PASSWORD}` / `${PG_PASSWORD}`; never commit them in YAML. Passwords are only expanded when the value starts with `$` (gnmic behavior), so a literal password containing `$` elsewhere is used as is.
-- `deploy/docker-compose.yml` falls back to demo values (`PG_PASSWORD` → `gnmic`, `GNMI_PASSWORD` → `admin`) when variables are unset. Always set them for real deployments.
+- `deploy/docker-compose.yml` has no default credentials: `PG_PASSWORD`, `GNMI_USERNAME` and `GNMI_PASSWORD` must be set or `docker compose` refuses to start.
+- Dependencies are checked with `cargo audit` (RustSec). The minimum Rust version is 1.88 because the patched `time` and `ctutils` releases require it. Two advisories remain as warnings only: `serde_yaml`'s `unsafe-libyaml` and `chrono` are marked unmaintained, with no known vulnerability.
 - systemd: secrets go in `/etc/gnmic-rs/env` (mode 600, owned by root or `gnmic`), loaded by `EnvironmentFile`.
 - Do not log credentials or tokens; keep `tracing` fields for config free of secret values.
 
